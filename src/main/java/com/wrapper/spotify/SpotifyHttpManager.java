@@ -154,10 +154,12 @@ public class SpotifyHttpManager implements HttpManager {
     try {
       httpClient.executeMethod(method);
 
-      handleErrorStatusCode(method);
+      int statusCode = method.getStatusCode();
+      handleErrorStatusCode(statusCode);
+
       String responseBody = method.getResponseBodyAsString();
 
-      handleErrorResponseBody(responseBody);
+      handleErrorResponseBody(statusCode, responseBody);
       return responseBody;
 
     } catch (IOException e) {
@@ -171,9 +173,7 @@ public class SpotifyHttpManager implements HttpManager {
    * Todo: Error handling could be more granular and throw a different exception depending on status code.
    * It could also look into the JSON object to find an error message.
    */
-  private void handleErrorStatusCode(HttpMethod method) throws BadRequestException, ServerErrorException {
-    int statusCode = method.getStatusCode();
-
+  private void handleErrorStatusCode(int statusCode) throws BadRequestException, ServerErrorException {
     if (statusCode >= 400 && statusCode < 500) {
       throw new BadRequestException(String.valueOf(statusCode));
     }
@@ -183,18 +183,20 @@ public class SpotifyHttpManager implements HttpManager {
 
   }
 
-  private void handleErrorResponseBody(String responseBody) throws WebApiException {
-    if (responseBody == null) {
-      throw new EmptyResponseException("No response body");
-    }
-
-    if (!responseBody.equals("") && responseBody.startsWith("{")) {
-      final JSONObject jsonObject = JSONObject.fromObject(responseBody);
-      if (jsonObject.has("error")) {
-        throw new WebApiException(jsonObject.getString("error"));
-      }
-    }
-  }
+	private void handleErrorResponseBody(int statusCode, String responseBody) throws WebApiException {
+		if (statusCode == 204) {
+			return;
+		}
+		if (responseBody == null) {
+			throw new EmptyResponseException("No response body");
+		}
+		if (!responseBody.equals("") && responseBody.startsWith("{")) {
+			final JSONObject jsonObject = JSONObject.fromObject(responseBody);
+			if (jsonObject.has("error")) {
+				throw new WebApiException(jsonObject.getString("error"));
+			}
+		}
+	}
 
   public static Builder builder() {
     return new Builder();

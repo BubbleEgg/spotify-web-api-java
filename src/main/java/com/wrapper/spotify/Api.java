@@ -553,5 +553,40 @@ public class Api {
 
   }
 
+  /**
+   * Get a users available devices.
+   * @return A builder object that can be used to build a request to get the user's available devices.
+   */
+  public AvailableDevicesRequest.Builder getAvailableDevices() {
+    final AvailableDevicesRequest.Builder builder = AvailableDevicesRequest.builder();
+    setDefaults(builder);
+    builder.path("/v1/me/player/devices");
+    return builder;
+  }
+
+  /**
+   * Get a users current playback information.
+   * @return A builder object that can be used to build a request to get the user's current playback information.
+   */
+  public PlaybackInformationRequest.Builder getCurrentPlayingContext() {
+    final PlaybackInformationRequest.Builder builder = PlaybackInformationRequest.builder();
+    setDefaults(builder);
+    builder.path("/v1/me/player");
+    return builder;
+  }
+
+  public PlayRequest.Builder play() {
+    final PlayRequest.Builder builder = PlayRequest.builder();
+    setDefaults(builder);
+    builder.path("/v1/me/player/play");
+    return builder;
+  }
+
+  public PauseRequest.Builder pause() {
+    final PauseRequest.Builder builder = PauseRequest.builder();
+    setDefaults(builder);
+    builder.path("/v1/me/player/pause");
+    return builder;
+  }
 }
 

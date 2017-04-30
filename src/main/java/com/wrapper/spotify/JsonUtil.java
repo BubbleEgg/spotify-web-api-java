@@ -6,6 +6,8 @@ import com.wrapper.spotify.models.Artist;
 import com.wrapper.spotify.models.AuthorizationCodeCredentials;
 import com.wrapper.spotify.models.ClientCredentials;
 import com.wrapper.spotify.models.Copyright;
+import com.wrapper.spotify.models.CurrentlyPlayingContext;
+import com.wrapper.spotify.models.Device;
 import com.wrapper.spotify.models.ExternalIds;
 import com.wrapper.spotify.models.ExternalUrls;
 import com.wrapper.spotify.models.FeaturedPlaylists;
@@ -19,6 +21,7 @@ import com.wrapper.spotify.models.PlaylistTrack;
 import com.wrapper.spotify.models.PlaylistTracksInformation;
 import com.wrapper.spotify.models.Product;
 import com.wrapper.spotify.models.RefreshAccessTokenCredentials;
+import com.wrapper.spotify.models.RepeatState;
 import com.wrapper.spotify.models.SimpleAlbum;
 import com.wrapper.spotify.models.SimpleArtist;
 import com.wrapper.spotify.models.SimplePlaylist;
@@ -684,5 +687,76 @@ public class JsonUtil {
     SnapshotResult result = new SnapshotResult();
     result.setSnapshotId(jsonObject.getString("snapshot_id"));
     return result;
+  }
+
+  public static List<Device> createDevices(String json) {
+    return createDevices(JSONObject.fromObject(json));
+  }
+
+  public static List<Device> createDevices(JSONObject jsonObject) {
+    List<Device> returnedDevices = new ArrayList<Device>();
+    JSONArray devicesObject = jsonObject.getJSONArray("devices");
+    for (int i = 0; i < devicesObject.size(); i++) {
+    	returnedDevices.add(createDevice(devicesObject.getJSONObject(i)));
+    }
+    return returnedDevices;
+  }
+
+  public static Device createDevice(String json) {
+    return createDevice(JSONObject.fromObject(json));
+  }
+
+  public static Device createDevice(JSONObject jsonObject) {
+    if (jsonObject == null || jsonObject.isNullObject()) {
+      return null;
+    }
+
+    Device device = new Device();
+    device.setId(jsonObject.getString("id"));
+    device.setActive(jsonObject.getBoolean("is_active"));
+    device.setRestricted(jsonObject.getBoolean("is_restricted"));
+    device.setName(jsonObject.getString("name"));
+    device.setType(jsonObject.getString("type"));
+    device.setVolumePercent(jsonObject.getInt("volume_percent"));
+
+    return device;
+  }
+
+  public static CurrentlyPlayingContext createCurrentlyPlayingContext(String json) {
+    return createCurrentlyPlayingContext(JSONObject.fromObject(json));
+  }
+
+  public static CurrentlyPlayingContext createCurrentlyPlayingContext(JSONObject jsonObject) {
+    if (jsonObject == null || jsonObject.isNullObject()) {
+      return null;
+    }
+
+    CurrentlyPlayingContext currentlyPlayingContext = new CurrentlyPlayingContext();
+    currentlyPlayingContext.setDevice(createDevice(jsonObject.getJSONObject("device")));
+    currentlyPlayingContext.setRepeatState(createRepeatState(jsonObject.getString("repeat_state")));
+    currentlyPlayingContext.setShuffleState(jsonObject.getBoolean("shuffle_state"));
+
+    JSONObject jsonContextObject = jsonObject.getJSONObject("context");
+    if (jsonContextObject == null || jsonContextObject.isNullObject()) {
+    	currentlyPlayingContext.setContext(null);
+    } else {
+        CurrentlyPlayingContext.Context context = currentlyPlayingContext.new Context();
+        context.setUri(jsonContextObject.getString("uri"));
+        context.setHref(jsonContextObject.getString("href"));
+        context.setExternalUrls(createExternalUrls(jsonContextObject.getJSONObject("external_urls")));
+        context.setType(createSpotifyEntityType(jsonContextObject.getString("type")));
+        currentlyPlayingContext.setContext(context);
+    }
+
+    currentlyPlayingContext.setTimestamp(jsonObject.getInt("timestamp"));
+    currentlyPlayingContext.setProgressMs(jsonObject.getInt("progress_ms"));
+    currentlyPlayingContext.setPlaying(jsonObject.getBoolean("is_playing"));
+    currentlyPlayingContext.setItem(createTrack(jsonObject.getJSONObject("item")));
+
+    return currentlyPlayingContext;
+  }
+
+  public static RepeatState createRepeatState(String state) {
+    return RepeatState.valueOf(state.toUpperCase());
   }
 }
